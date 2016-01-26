@@ -1,18 +1,22 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'jacoco'
-apply plugin: 'com.github.kt3k.coveralls'
-apply plugin: 'findbugs'
-
 buildscript {
         repositories {
                 mavenCentral()
+		jcenter()
         }
 
         dependencies {
+		classpath "com.palantir:gradle-baseline-java:$baselineVersion"
                 classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.4.0'
         }
 }
+
+apply plugin: 'java'
+apply plugin: 'com.palantir.baseline-config'
+apply plugin: 'com.palantir.baseline-checkstyle'
+apply plugin: 'com.palantir.baseline-eclipse'
+apply plugin: 'com.palantir.baseline-findbugs'
+apply plugin: 'jacoco'
+apply plugin: 'com.github.kt3k.coveralls'
 
 repositories {
         mavenCentral()
