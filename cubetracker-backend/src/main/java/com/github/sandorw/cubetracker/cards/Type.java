@@ -3,7 +3,8 @@ package com.github.sandorw.cubetracker.cards;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- *
+ * Used to note the card types of each card. Other serves as a catch all for a variety of types
+ * since the mtgjson project includes Archenemy, Unglued, and other abnormal cards.
  */
 public enum Type {
     ARTIFACT("Artifact"),
@@ -19,7 +20,7 @@ public enum Type {
 
     private String stringRepresentation;
 
-    private Type(String name) {
+    Type(String name) {
         stringRepresentation = name;
     }
 

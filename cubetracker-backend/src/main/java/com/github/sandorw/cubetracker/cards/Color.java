@@ -3,7 +3,7 @@ package com.github.sandorw.cubetracker.cards;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- *
+ * Used to note the color or colors of a card. Colorless cards have no colors.
  */
 public enum Color {
     WHITE("White"),
@@ -14,7 +14,7 @@ public enum Color {
 
     private String stringRepresentation;
 
-    private Color(String name) {
+    Color(String name) {
         stringRepresentation = name;
     }
 
