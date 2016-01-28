@@ -2,59 +2,25 @@ buildscript {
         repositories {
                 mavenCentral()
 		jcenter()
+		maven { url 'https://plugins.gradle.org/m2/' }
         }
 
         dependencies {
 		classpath "com.palantir:gradle-baseline-java:$baselineVersion"
+		classpath "gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.3.0"
+		classpath "gradle.plugin.com.palantir.gradle.javadist:gradle-java-distribution:${gradleJavaDistVersion}"
+		classpath "gradle.plugin.org.inferred:gradle-processors:${gradleProcessorsVersion}"
                 classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.4.0'
         }
 }
 
-apply plugin: 'java'
-apply plugin: 'com.palantir.baseline-config'
-apply plugin: 'com.palantir.baseline-checkstyle'
-apply plugin: 'com.palantir.baseline-eclipse'
-apply plugin: 'com.palantir.baseline-findbugs'
-apply plugin: 'jacoco'
 apply plugin: 'com.github.kt3k.coveralls'
+apply plugin: 'com.palantir.baseline-config'
+apply plugin: 'com.palantir.git-version'
+apply plugin: 'jacoco'
+apply plugin: 'org.inferred.processors'
 
-repositories {
-        mavenCentral()
-        jcenter()
+allprojects {
+	version gitVersion()
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-dependencies {
-        compile "com.google.guava:guava:$guavaVersion"
-        compile "org.apache.commons:commons-lang3:$commonsLangVersion"
-        compile "org.slf4j:slf4j-api:$slf4jVersion"
-        compile "org.apache.logging.log4j:log4j-api:$log4jVersion"
-        compile "org.apache.logging.log4j:log4j-core:$log4jVersion"
-        compile "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
-
-        testCompile "junit:junit:$junitVersion"
-        testCompile "org.mockito:mockito-core:$mockitoVersion"
-}
-
-jacoco {
-        toolVersion = jacocoVersion
-}
-
-jacocoTestReport {
-        reports {
-                xml.enabled = true
-                html.enabled = true
-        }
-}
-
-afterEvaluate {
-        coveralls {
-                jacocoReportPath = "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
-        }
-}
-
-tasks.coveralls {
-        dependsOn tasks.jacocoTestReport
-}
