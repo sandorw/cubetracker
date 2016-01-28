@@ -1,7 +1,3 @@
-/*
- * Copyright 2016 Palantir Technologies, Inc. All rights reserved.
- */
-
 package com.github.sandorw.cubetracker.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;

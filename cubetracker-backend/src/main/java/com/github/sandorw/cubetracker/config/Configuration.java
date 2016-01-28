@@ -1,7 +1,3 @@
-/*
- * Copyright 2016 Palantir Technologies, Inc. All rights reserved.
- */
-
 package com.github.sandorw.cubetracker.config;
 
 import org.apache.commons.lang3.Validate;

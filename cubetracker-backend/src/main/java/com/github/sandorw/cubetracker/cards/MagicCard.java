@@ -1,7 +1,3 @@
-/*
- * Copyright 2016 Palantir Technologies, Inc. All rights reserved.
- */
-
 package com.github.sandorw.cubetracker.cards;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
