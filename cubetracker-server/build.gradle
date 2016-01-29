@@ -19,6 +19,7 @@ dependencies {
 	compile "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
         compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
 	compile "com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion"
+	compile "io.dropwizard:dropwizard-core:$dropwizardVersion"
 
 	processor "org.immutables:value:${immutablesVersion}"
 
