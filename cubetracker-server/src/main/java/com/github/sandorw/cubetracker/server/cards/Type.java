@@ -1,4 +1,4 @@
-package com.github.sandorw.cubetracker.cards;
+package com.github.sandorw.cubetracker.server.cards;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
