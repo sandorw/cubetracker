@@ -1,11 +1,9 @@
-/*
- * Copyright 2016 Palantir Technologies, Inc. All rights reserved.
- */
-
 package com.github.sandorw.cubetracker.server.api;
 
+import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
+import java.util.List;
 
 /**
  * Implementation of the cubetracker-server api.
@@ -24,6 +22,42 @@ public final class CubeTrackerResource implements CubeTrackerService {
     @Override
     public MagicCard getMagicCard(String cardName) {
         return store.getMagicCard(cardName).orNull();
+    }
+
+    @Override
+    public List<String> searchAllCardNames(String partialCardName) {
+        return store.searchAllCardNames(partialCardName);
+    }
+
+    @Override
+    public List<String> searchActiveCardNames(String partialCardName) {
+        return store.searchActiveCardNames(partialCardName);
+    }
+
+    @Override
+    public List<String> searchInactiveCardNames(String partialCardName) {
+        return store.searchInactiveCardNames(partialCardName);
+    }
+
+    @Override
+    public CardUsageData getCardData(String cardName) {
+        return store.getCubeCardData(cardName).orNull();
+    }
+
+    @Override
+    public CardUsageData addActiveCard(String cardName) {
+        if (store.isValidCard(cardName)) {
+            return store.addActiveCard(cardName);
+        }
+        return null;
+    }
+
+    @Override
+    public CardUsageData addInactiveCard(String cardName) {
+        if (store.isValidCard(cardName)) {
+            return store.addInactiveCard(cardName);
+        }
+        return null;
     }
 
 }
