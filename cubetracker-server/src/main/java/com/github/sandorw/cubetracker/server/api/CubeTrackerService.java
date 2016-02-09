@@ -53,6 +53,7 @@ public interface CubeTrackerService {
      */
     @GET
     @Path("/cubecards/{cardName}")
+    @Produces(MediaType.APPLICATION_JSON)
     CardUsageData getCardData(@PathParam("cardName") String cardName);
 
     /**
@@ -60,6 +61,7 @@ public interface CubeTrackerService {
      */
     @PUT
     @Path("/cubecards/active/{cardName}")
+    @Produces(MediaType.APPLICATION_JSON)
     CardUsageData addActiveCard(@PathParam("cardName") String cardName);
 
     /**
@@ -67,6 +69,7 @@ public interface CubeTrackerService {
      */
     @PUT
     @Path("/cubecards/inactive/{cardName}")
+    @Produces(MediaType.APPLICATION_JSON)
     CardUsageData addInactiveCard(@PathParam("cardName") String cardName);
 
 }
