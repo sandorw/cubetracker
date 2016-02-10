@@ -25,6 +25,8 @@ dependencies {
 	compile "com.palantir.atlasdb:atlasdb-client:$atlasVersion"
 	compile "com.palantir.atlasdb:atlasdb-config:$atlasVersion"
 	compile "com.palantir.atlasdb:atlasdb-rocksdb:$atlasVersion"
+	compile "com.palantir.remoting:http-servers:${httpRemotingVersion}"
+	compile "com.palantir.remoting:error-handling:${httpRemotingVersion}"
 	compile "io.dropwizard:dropwizard-core:$dropwizardVersion"
 	compile "org.apache.commons:commons-lang3:$commonsLangVersion"
 

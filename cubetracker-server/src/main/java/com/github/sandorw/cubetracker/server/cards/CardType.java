@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * Used to note the card types of each card. Other serves as a catch all for a variety of types
  * since the mtgjson project includes Archenemy, Unglued, and other abnormal cards.
  */
-public enum Type {
+public enum CardType {
     ARTIFACT("Artifact"),
     CONSPIRACY("Conspiracy"),
     CREATURE("Creature"),
@@ -20,13 +20,13 @@ public enum Type {
 
     private String stringRepresentation;
 
-    Type(String name) {
+    CardType(String name) {
         stringRepresentation = name;
     }
 
     @JsonCreator
-    public static Type fromString(String type) {
-        for (Type enumType : Type.values()) {
+    public static CardType fromString(String type) {
+        for (CardType enumType : CardType.values()) {
             if (type.equalsIgnoreCase(enumType.stringRepresentation)) {
                 return enumType;
             }

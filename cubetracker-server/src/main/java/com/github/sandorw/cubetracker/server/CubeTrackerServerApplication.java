@@ -8,6 +8,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.atlasdb.factory.TransactionManagers;
 import com.palantir.atlasdb.transaction.api.TransactionManager;
+import com.palantir.remoting.http.server.ExceptionMappers;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import javax.net.ssl.SSLSocketFactory;
@@ -32,6 +33,7 @@ public final class CubeTrackerServerApplication extends Application<CubeTrackerS
         store.loadMagicCardJson(configuration);
         final CubeTrackerResource resource = CubeTrackerResource.of(store);
         environment.jersey().register(resource);
+        ExceptionMappers.visitExceptionMappers(true, environment.jersey()::register);
     }
 
 }

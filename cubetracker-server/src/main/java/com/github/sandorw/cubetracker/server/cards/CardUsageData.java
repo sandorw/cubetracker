@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.UUID;
 import org.immutables.value.Value;
 
 /**
@@ -39,12 +38,7 @@ public abstract class CardUsageData {
     }
 
     @Value.Default
-    public int getNumOnColorSideboards() {
-        return 0;
-    }
-
-    @Value.Default
-    public List<UUID> getDeckIDs() {
+    public List<String> getDeckIDs() {
         return ImmutableList.of();
     }
 

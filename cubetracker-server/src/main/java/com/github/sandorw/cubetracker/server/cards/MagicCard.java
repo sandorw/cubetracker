@@ -26,7 +26,7 @@ public abstract class MagicCard {
 
     public abstract String type();
 
-    public abstract List<Type> types();
+    public abstract List<CardType> types();
 
     public abstract Optional<String> text();
 

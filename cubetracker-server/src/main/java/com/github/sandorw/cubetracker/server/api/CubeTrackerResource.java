@@ -2,6 +2,7 @@ package com.github.sandorw.cubetracker.server.api;
 
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
+import com.github.sandorw.cubetracker.server.decks.DeckList;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
 import java.util.List;
 
@@ -49,7 +50,7 @@ public final class CubeTrackerResource implements CubeTrackerService {
         if (store.isValidCard(cardName)) {
             return store.addActiveCard(cardName);
         }
-        return null;
+        throw new IllegalArgumentException("Not a valid card");
     }
 
     @Override
@@ -57,7 +58,12 @@ public final class CubeTrackerResource implements CubeTrackerService {
         if (store.isValidCard(cardName)) {
             return store.addInactiveCard(cardName);
         }
-        return null;
+        throw new IllegalArgumentException("Not a valid card");
+    }
+
+    @Override
+    public String addDeck(DeckList deck) {
+        return store.addDeck(deck);
     }
 
 }
