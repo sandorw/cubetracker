@@ -2,8 +2,11 @@ package com.github.sandorw.cubetracker.server.api;
 
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
+import com.github.sandorw.cubetracker.server.decks.DeckList;
 import java.util.List;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -53,6 +56,7 @@ public interface CubeTrackerService {
      */
     @GET
     @Path("/cubecards/{cardName}")
+    @Produces(MediaType.APPLICATION_JSON)
     CardUsageData getCardData(@PathParam("cardName") String cardName);
 
     /**
@@ -60,6 +64,7 @@ public interface CubeTrackerService {
      */
     @PUT
     @Path("/cubecards/active/{cardName}")
+    @Produces(MediaType.APPLICATION_JSON)
     CardUsageData addActiveCard(@PathParam("cardName") String cardName);
 
     /**
@@ -67,6 +72,16 @@ public interface CubeTrackerService {
      */
     @PUT
     @Path("/cubecards/inactive/{cardName}")
+    @Produces(MediaType.APPLICATION_JSON)
     CardUsageData addInactiveCard(@PathParam("cardName") String cardName);
+
+    /**
+     * Submits a deck list to be stored. Updates card usage for cards in the deck. Returns the deck ID.
+     */
+    @POST
+    @Path("/decks/submit")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    String addDeck(DeckList deck);
 
 }

@@ -39,14 +39,24 @@ public class CubeTrackerStoreTableFactory {
         return CubeCardsTable.of(t, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));
     }
 
+    public CubeDecksTable getCubeDecksTable(Transaction t, CubeDecksTable.CubeDecksTrigger... triggers) {
+        return CubeDecksTable.of(t, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));
+    }
+
     public interface SharedTriggers extends
-            CubeCardsTable.CubeCardsTrigger {
+            CubeCardsTable.CubeCardsTrigger,
+            CubeDecksTable.CubeDecksTrigger {
         /* empty */
     }
 
     public abstract static class NullSharedTriggers implements SharedTriggers {
         @Override
         public void putCubeCards(Multimap<CubeCardsTable.CubeCardsRow, ? extends CubeCardsTable.CubeCardsNamedColumnValue<?>> newRows) {
+            // do nothing
+        }
+
+        @Override
+        public void putCubeDecks(Multimap<CubeDecksTable.CubeDecksRow, ? extends CubeDecksTable.CubeDecksNamedColumnValue<?>> newRows) {
             // do nothing
         }
     }
