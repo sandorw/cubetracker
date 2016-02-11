@@ -43,9 +43,14 @@ public class CubeTrackerStoreTableFactory {
         return CubeDecksTable.of(t, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));
     }
 
+    public CubeMatchesTable getCubeMatchesTable(Transaction t, CubeMatchesTable.CubeMatchesTrigger... triggers) {
+        return CubeMatchesTable.of(t, namespace, Triggers.getAllTriggers(t, sharedTriggers, triggers));
+    }
+
     public interface SharedTriggers extends
             CubeCardsTable.CubeCardsTrigger,
-            CubeDecksTable.CubeDecksTrigger {
+            CubeDecksTable.CubeDecksTrigger,
+            CubeMatchesTable.CubeMatchesTrigger {
         /* empty */
     }
 
@@ -57,6 +62,11 @@ public class CubeTrackerStoreTableFactory {
 
         @Override
         public void putCubeDecks(Multimap<CubeDecksTable.CubeDecksRow, ? extends CubeDecksTable.CubeDecksNamedColumnValue<?>> newRows) {
+            // do nothing
+        }
+
+        @Override
+        public void putCubeMatches(Multimap<CubeMatchesTable.CubeMatchesRow, ? extends CubeMatchesTable.CubeMatchesNamedColumnValue<?>> newRows) {
             // do nothing
         }
     }

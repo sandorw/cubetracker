@@ -3,6 +3,7 @@ package com.github.sandorw.cubetracker.server.api;
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
+import com.github.sandorw.cubetracker.server.match.MatchResult;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -83,5 +84,22 @@ public interface CubeTrackerService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     String addDeck(DeckList deck);
+
+    /**
+     * Submits a match result between two decks.
+     */
+    @PUT
+    @Path("/matches/submit")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    void addMatchResult(MatchResult match);
+
+    /**
+     * Gets a list of match results for a given deck.
+     */
+    @GET
+    @Path("/matches/{deckId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<MatchResult> getMatchResults(@PathParam("deckId") String deckId);
 
 }
