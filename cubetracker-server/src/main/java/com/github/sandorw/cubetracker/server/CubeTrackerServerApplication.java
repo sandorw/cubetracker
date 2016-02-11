@@ -4,6 +4,7 @@ import com.github.sandorw.cubetracker.server.api.CubeTrackerResource;
 import com.github.sandorw.cubetracker.server.configuration.CubeTrackerServerConfiguration;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
 import com.github.sandorw.cubetracker.server.store.atlas.AtlasCubeTrackerSchema;
+import com.github.sandorw.cubetracker.server.store.atlas.AtlasCubeTrackerStore;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.atlasdb.factory.TransactionManagers;
@@ -29,7 +30,7 @@ public final class CubeTrackerServerApplication extends Application<CubeTrackerS
                 Optional.<SSLSocketFactory>absent(),
                 ImmutableSet.of(AtlasCubeTrackerSchema.SCHEMA),
                 environment.jersey()::register);
-        CubeTrackerStore store = new CubeTrackerStore(transactionManager);
+        CubeTrackerStore store = new AtlasCubeTrackerStore(transactionManager);
         store.loadMagicCardJson(configuration);
         final CubeTrackerResource resource = CubeTrackerResource.of(store);
         environment.jersey().register(resource);
