@@ -3,6 +3,7 @@ package com.github.sandorw.cubetracker.server.api;
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
+import com.github.sandorw.cubetracker.server.match.MatchResult;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
 import java.util.List;
 
@@ -64,6 +65,16 @@ public final class CubeTrackerResource implements CubeTrackerService {
     @Override
     public String addDeck(DeckList deck) {
         return store.addDeck(deck);
+    }
+
+    @Override
+    public void addMatchResult(MatchResult match) {
+        store.addMatchResult(match);
+    }
+
+    @Override
+    public List<MatchResult> getMatchResults(String deckId) {
+        return store.getMatchResults(deckId);
     }
 
 }

@@ -8,13 +8,18 @@ import com.github.sandorw.cubetracker.server.cards.ImmutableCardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.configuration.CubeTrackerServerConfiguration;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
+import com.github.sandorw.cubetracker.server.match.ImmutableMatchResult;
+import com.github.sandorw.cubetracker.server.match.MatchResult;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeCardsTable;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeDecksTable;
+import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeMatchesTable;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeTrackerStoreTableFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.palantir.atlasdb.keyvalue.api.RangeRequest;
+import com.palantir.atlasdb.transaction.api.Transaction;
 import com.palantir.atlasdb.transaction.api.TransactionManager;
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +34,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
 /**
  * Atlas implementation of the CubeTracker data store.
  */
-public class AtlasCubeTrackerStore implements CubeTrackerStore {
+public final class AtlasCubeTrackerStore implements CubeTrackerStore {
     private volatile Map<String, MagicCard> magicCardMap;
     private volatile Set<String> allCardNames;
     private volatile Set<String> activeCardNames;
@@ -238,5 +243,81 @@ public class AtlasCubeTrackerStore implements CubeTrackerStore {
             throw new IllegalArgumentException("Deck contains cards not in the cube");
         }
         return deckId;
+    }
+
+    @Override
+    public void addMatchResult(MatchResult match) {
+        txnManager.runTaskWithRetry(atlasTransaction -> {
+            CubeMatchesTable cubeMatchesTable = TABLES.getCubeMatchesTable(atlasTransaction);
+            CubeMatchesTable.CubeMatchesRow matchRow = CubeMatchesTable.CubeMatchesRow.of(
+                    match.getFirstDeckId(), match.getSecondDeckId());
+            Optional<MatchResult> matchResult = cubeMatchesTable.getRow(matchRow).transform(r -> r.getMatchResult());
+            int firstDeckNumWins = match.getFirstDeckWins();
+            int secondDeckNumWins = match.getSecondDeckWins();
+            if (matchResult.isPresent()) {
+                if (matchResult.equals(match)) {
+                    return null;
+                }
+                firstDeckNumWins -= matchResult.get().getFirstDeckWins();
+                secondDeckNumWins -= matchResult.get().getSecondDeckWins();
+            }
+            Map<CubeMatchesTable.CubeMatchesRow, MatchResult> matchMap = Maps.newHashMap();
+            matchMap.put(matchRow, match);
+            CubeMatchesTable.CubeMatchesRow reverseMatchRow = CubeMatchesTable.CubeMatchesRow.of(
+                    match.getSecondDeckId(), match.getFirstDeckId());
+            MatchResult reverseMatch = ImmutableMatchResult.builder()
+                    .firstDeckId(match.getSecondDeckId())
+                    .secondDeckId(match.getFirstDeckId())
+                    .firstDeckWins(match.getSecondDeckWins())
+                    .secondDeckWins(match.getFirstDeckWins())
+                    .build();
+            matchMap.put(reverseMatchRow, reverseMatch);
+            cubeMatchesTable.putMatchResult(matchMap);
+
+            //Update corresponding cards from the decks
+            updateCardsInDeckList(atlasTransaction, match.getFirstDeckId(), firstDeckNumWins, secondDeckNumWins);
+            updateCardsInDeckList(atlasTransaction, match.getSecondDeckId(), secondDeckNumWins, firstDeckNumWins);
+
+            return null;
+        });
+    }
+
+    private void updateCardsInDeckList(Transaction atlasTransaction, String deckId, int numWins, int numLosses) {
+        if ((numWins == 0) && (numLosses == 0)) {
+            return;
+        }
+        CubeDecksTable cubeDecksTable = TABLES.getCubeDecksTable(atlasTransaction);
+        CubeDecksTable.CubeDecksRow deckRow = CubeDecksTable.CubeDecksRow.of(deckId);
+        Optional<DeckList> deckList = cubeDecksTable.getRow(deckRow).transform(r -> r.getDeckList());
+        if (!deckList.isPresent()) {
+            atlasTransaction.abort();
+            throw new IllegalArgumentException("Provided match deck ID does not exist");
+        }
+        CubeCardsTable cubeCardsTable = TABLES.getCubeCardsTable(atlasTransaction);
+        List<CubeCardsTable.CubeCardsRow> cardRows = deckList.get().getMaindeck().stream()
+                .map(d -> CubeCardsTable.CubeCardsRow.of(d))
+                .collect(Collectors.toList());
+        Map<CubeCardsTable.CubeCardsRow, CardUsageData> cardMap = cubeCardsTable.getCardUsages(cardRows);
+        for (Entry<CubeCardsTable.CubeCardsRow, CardUsageData> entry : cardMap.entrySet()) {
+            CardUsageData cardData = entry.getValue();
+            CardUsageData newCardData = ImmutableCardUsageData.builder()
+                    .from(entry.getValue())
+                    .numWins(cardData.getNumWins() + numWins)
+                    .numLosses(cardData.getNumLosses() + numLosses)
+                    .build();
+            cardMap.put(entry.getKey(), newCardData);
+        }
+        cubeCardsTable.putCardUsage(cardMap);
+    }
+
+    @Override
+    public List<MatchResult> getMatchResults(String deckId) {
+        return txnManager.runTaskReadOnly(atlasTransaction -> {
+            CubeMatchesTable cubeMatchesTable = TABLES.getCubeMatchesTable(atlasTransaction);
+            RangeRequest rangeRequest = CubeMatchesTable.CubeMatchesRow.createPrefixRangeUnsorted(deckId).build();
+            return cubeMatchesTable.getRange(rangeRequest)
+                    .transform(r -> r.getMatchResult())
+                    .immutableCopy();
+        });
     }
 }

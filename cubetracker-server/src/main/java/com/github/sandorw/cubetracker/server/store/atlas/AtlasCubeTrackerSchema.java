@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.github.sandorw.cubetracker.server.cards.CardUsageDataPersister;
 import com.github.sandorw.cubetracker.server.decks.DeckListPersister;
+import com.github.sandorw.cubetracker.server.match.MatchResultPersister;
 import com.palantir.atlasdb.schema.AtlasSchema;
 import com.palantir.atlasdb.schema.Namespace;
 import com.palantir.atlasdb.table.description.Schema;
@@ -58,6 +59,19 @@ public final class AtlasCubeTrackerSchema implements AtlasSchema {
 
                 columns();
                 column("deck_list", "d", DeckListPersister.class);
+            }
+        });
+
+        schema.addTableDefinition("cube_matches", new TableDefinition() {
+            {
+                rowName();
+                rowComponent("first_deck_id", ValueType.VAR_STRING);
+                rowComponent("second_deck_id", ValueType.VAR_STRING);
+
+                columns();
+                column("match_result", "m", MatchResultPersister.class);
+
+                rangeScanAllowed();
             }
         });
 
