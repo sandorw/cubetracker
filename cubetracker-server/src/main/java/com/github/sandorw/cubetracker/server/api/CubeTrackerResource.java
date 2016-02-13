@@ -5,6 +5,7 @@ import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
 import com.github.sandorw.cubetracker.server.match.MatchResult;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
+import com.google.common.base.Optional;
 import java.util.List;
 
 /**
@@ -75,6 +76,15 @@ public final class CubeTrackerResource implements CubeTrackerService {
     @Override
     public List<MatchResult> getMatchResults(String deckId) {
         return store.getMatchResults(deckId);
+    }
+
+    @Override
+    public DeckList getDeck(String deckId) {
+        Optional<DeckList> deck = store.getDeck(deckId);
+        if (deck.isPresent()) {
+            return deck.get();
+        }
+        throw new IllegalArgumentException("Not a valid deck Id");
     }
 
 }

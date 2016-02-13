@@ -37,4 +37,6 @@ public interface CubeTrackerStore {
 
     List<MatchResult> getMatchResults(String deckId);
 
+    Optional<DeckList> getDeck(String deckId);
+
 }
