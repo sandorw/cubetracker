@@ -85,7 +85,11 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
 
     @Override
     public Optional<MagicCard> getMagicCard(String cardName) {
-        return Optional.of(magicCardMap.get(cardName));
+        MagicCard card = magicCardMap.get(cardName);
+        if (card == null) {
+            return Optional.absent();
+        }
+        return Optional.of(card);
     }
 
     @Override
@@ -318,6 +322,15 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
             return cubeMatchesTable.getRange(rangeRequest)
                     .transform(r -> r.getMatchResult())
                     .immutableCopy();
+        });
+    }
+
+    @Override
+    public Optional<DeckList> getDeck(String deckId) {
+        return txnManager.runTaskReadOnly(atlasTransaction -> {
+            CubeDecksTable cubeDecksTable = TABLES.getCubeDecksTable(atlasTransaction);
+            CubeDecksTable.CubeDecksRow row = CubeDecksTable.CubeDecksRow.of(deckId);
+            return cubeDecksTable.getRow(row).transform(r -> r.getDeckList());
         });
     }
 }

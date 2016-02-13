@@ -19,7 +19,7 @@ import java.io.IOException;
  * Atlas schema specification for the CubeTracker data store.
  */
 public final class AtlasCubeTrackerSchema implements AtlasSchema {
-
+    public static final AtlasSchema INSTANCE = new AtlasCubeTrackerSchema();
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new GuavaModule());
     public static final Namespace NAMESPACE = Namespace.create("cubeTracker");
     public static final Schema SCHEMA = generateSchema();

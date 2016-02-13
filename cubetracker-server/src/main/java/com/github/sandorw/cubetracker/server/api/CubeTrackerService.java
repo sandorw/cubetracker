@@ -86,6 +86,14 @@ public interface CubeTrackerService {
     String addDeck(DeckList deck);
 
     /**
+     * Retrieves a deck via the deck ID.
+     */
+    @GET
+    @Path("/decks/{deckId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    DeckList getDeck(@PathParam("deckId") String deckId);
+
+    /**
      * Submits a match result between two decks.
      */
     @PUT
