@@ -83,6 +83,34 @@ public final class AtlasCubeTrackerStoreTest {
     }
 
     @Test
+    public void addActiveCard_autocompleteMatches() {
+        store.addActiveCard("Gloom");
+        assertEquals(store.searchActiveCardNames("Gl"),
+                ImmutableList.of("Gloom"));
+    }
+
+    @Test
+    public void addActiveCard_replaceInactiveCard() {
+        store.addInactiveCard("Gloom");
+        String deckId = addValidOneCardDeck("Gloom");
+        assertEquals(store.searchInactiveCardNames("Gl"),
+                ImmutableList.of("Gloom"));
+        store.addActiveCard("Gloom");
+        assertEquals(store.searchInactiveCardNames("Gl"),
+                ImmutableList.of());
+        assertEquals(store.searchActiveCardNames("Gl"),
+                ImmutableList.of("Gloom"));
+        CardUsageData cardData = store.getCubeCardData("Gloom").get();
+        assertEquals(cardData.getIsActive(), true);
+        assertEquals(cardData.getNumWins(), 0);
+        assertEquals(cardData.getNumLosses(), 0);
+        assertEquals(cardData.getNumMaindecks(), 1);
+        assertEquals(cardData.getNumDrafts(), 1);
+        assertEquals(cardData.getDeckIDs().size(), 1);
+        assertTrue(cardData.getDeckIDs().contains(deckId));
+    }
+
+    @Test
     public void addDeck_notEnoughCards() {
         int[] basics = {0, 0, 0, 0, 0};
         DeckList deck = ImmutableDeckList.builder()
@@ -108,18 +136,10 @@ public final class AtlasCubeTrackerStoreTest {
     }
 
     @Test
-    public void addDeck_validDeckUpdatesCardData() {
+    public void addDeck_getDeck() {
         store.addActiveCard("Gloom");
         String deckId = addValidOneCardDeck("Gloom");
         assertNotNull(deckId);
-        CardUsageData cardData = store.getCubeCardData("Gloom").get();
-        assertEquals(cardData.getIsActive(), true);
-        assertEquals(cardData.getNumWins(), 0);
-        assertEquals(cardData.getNumLosses(), 0);
-        assertEquals(cardData.getNumMaindecks(), 1);
-        assertEquals(cardData.getNumDrafts(), 1);
-        assertEquals(cardData.getDeckIDs().size(), 1);
-        assertTrue(cardData.getDeckIDs().contains(deckId));
         DeckList gloomDeck = store.getDeck(deckId).get();
         assertEquals(gloomDeck.getMaindeck(), ImmutableList.of("Gloom"));
         assertEquals(gloomDeck.getSideboard(), ImmutableList.of());
