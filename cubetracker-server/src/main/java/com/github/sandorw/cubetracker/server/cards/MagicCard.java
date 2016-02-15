@@ -1,6 +1,7 @@
 package com.github.sandorw.cubetracker.server.cards;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Optional;
@@ -16,18 +17,25 @@ import org.immutables.value.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class MagicCard {
 
-    public abstract String name();
+    public abstract String getName();
 
-    public abstract Optional<String> manaCost();
+    public abstract Optional<String> getManaCost();
 
-    public abstract Optional<Double> cmc();
+    public abstract Optional<Double> getCmc();
 
-    public abstract List<Color> colors();
+    public abstract List<Color> getColors();
 
-    public abstract String type();
+    @JsonProperty("type")
+    public abstract String getTypeInfo();
 
-    public abstract List<CardType> types();
+    public abstract List<CardType> getTypes();
 
-    public abstract Optional<String> text();
+    public abstract Optional<String> getText();
+
+    public abstract Optional<String> getPower();
+
+    public abstract Optional<String> getToughness();
+
+    public abstract Optional<Integer> getLoyalty();
 
 }
