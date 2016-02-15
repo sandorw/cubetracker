@@ -3,15 +3,19 @@ package com.github.sandorw.cubetracker.server.store.atlas;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.github.sandorw.cubetracker.server.cards.CardSearchQuery;
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.ImmutableCardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
+import com.github.sandorw.cubetracker.server.cards.filters.ComplexCardUsageFilter;
+import com.github.sandorw.cubetracker.server.cards.filters.ComplexMagicCardFilter;
 import com.github.sandorw.cubetracker.server.configuration.CubeTrackerServerConfiguration;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
 import com.github.sandorw.cubetracker.server.match.ImmutableMatchResult;
 import com.github.sandorw.cubetracker.server.match.MatchResult;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeCardsTable;
+import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeCardsTable.CubeCardsRow;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeDecksTable;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeMatchesTable;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeTrackerStoreTableFactory;
@@ -23,10 +27,12 @@ import com.palantir.atlasdb.transaction.api.Transaction;
 import com.palantir.atlasdb.transaction.api.TransactionManager;
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -332,5 +338,58 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
             CubeDecksTable.CubeDecksRow row = CubeDecksTable.CubeDecksRow.of(deckId);
             return cubeDecksTable.getRow(row).transform(r -> r.getDeckList());
         });
+    }
+
+    @Override
+    public Map<MagicCard, CardUsageData> getCardSearchResults(CardSearchQuery query) {
+        return txnManager.runTaskReadOnly(atlasTransaction -> {
+            return getCardSearchResultsOnTxn(query, atlasTransaction);
+        });
+    }
+
+    private Map<MagicCard, CardUsageData> getCardSearchResultsOnTxn(
+            CardSearchQuery query,
+            Transaction atlasTransaction) {
+        Set<String> cardNames;
+        switch (query.getStartingSet()) {
+            case ALL:
+                cardNames = new TreeSet<>(activeCardNames);
+                cardNames.addAll(inactiveCardNames);
+                break;
+            case ACTIVE:
+                cardNames = new TreeSet<>(activeCardNames);
+                break;
+            default:
+                cardNames = new TreeSet<>(inactiveCardNames);
+                break;
+        }
+        for (Iterator<String> it = cardNames.iterator(); it.hasNext(); ) {
+            String cardName = it.next();
+            MagicCard card = magicCardMap.get(cardName);
+            for (ComplexMagicCardFilter filter : query.getMagicCardFilters()) {
+                if (!filter.accept(card)) {
+                    it.remove();
+                }
+            }
+        }
+        CubeCardsTable cubeCardsTable = TABLES.getCubeCardsTable(atlasTransaction);
+        List<CubeCardsRow> cardRows = cardNames.stream()
+                .map(name -> CubeCardsRow.of(name))
+                .collect(Collectors.toList());
+        Map<CubeCardsRow, CardUsageData> usageMap = cubeCardsTable.getCardUsages(cardRows);
+        for (Iterator<Map.Entry<CubeCardsRow, CardUsageData>> it = usageMap.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<CubeCardsRow, CardUsageData> entry = it.next();
+            CardUsageData cardData = entry.getValue();
+            for (ComplexCardUsageFilter filter : query.getCardUsageFilters()) {
+                if (!filter.accept(cardData)) {
+                    it.remove();
+                }
+            }
+        }
+        Map<MagicCard, CardUsageData> returnData = Maps.newHashMap();
+        for (Map.Entry<CubeCardsRow, CardUsageData> entry : usageMap.entrySet()) {
+            returnData.put(magicCardMap.get(entry.getKey().getCardName()), entry.getValue());
+        }
+        return returnData;
     }
 }

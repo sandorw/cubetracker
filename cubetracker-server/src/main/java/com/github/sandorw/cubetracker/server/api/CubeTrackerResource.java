@@ -1,5 +1,6 @@
 package com.github.sandorw.cubetracker.server.api;
 
+import com.github.sandorw.cubetracker.server.cards.CardSearchQuery;
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
@@ -7,6 +8,7 @@ import com.github.sandorw.cubetracker.server.match.MatchResult;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
 import com.google.common.base.Optional;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of the cubetracker-server api.
@@ -85,6 +87,11 @@ public final class CubeTrackerResource implements CubeTrackerService {
             return deck.get();
         }
         throw new IllegalArgumentException("Not a valid deck Id");
+    }
+
+    @Override
+    public Map<MagicCard, CardUsageData> getCardSearchResults(CardSearchQuery query) {
+        return store.getCardSearchResults(query);
     }
 
 }

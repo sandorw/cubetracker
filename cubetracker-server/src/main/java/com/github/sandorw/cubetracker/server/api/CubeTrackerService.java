@@ -1,10 +1,12 @@
 package com.github.sandorw.cubetracker.server.api;
 
+import com.github.sandorw.cubetracker.server.cards.CardSearchQuery;
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
 import com.github.sandorw.cubetracker.server.match.MatchResult;
 import java.util.List;
+import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -109,5 +111,25 @@ public interface CubeTrackerService {
     @Path("/matches/{deckId}")
     @Produces(MediaType.APPLICATION_JSON)
     List<MatchResult> getMatchResults(@PathParam("deckId") String deckId);
+
+    /**
+     * Gets the cards matching the given CardSearchQuery.
+     */
+    @GET
+    @Path("/search/cards")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Map<MagicCard, CardUsageData> getCardSearchResults(CardSearchQuery query);
+
+    /**
+     * Gets the decks matching the given DeckSearchQuery.
+     */
+    /*
+    @GET
+    @Path("/search/decks")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    List<DeckList> getDeckSearchResults(DeckSearchQuery query);
+    */
 
 }
