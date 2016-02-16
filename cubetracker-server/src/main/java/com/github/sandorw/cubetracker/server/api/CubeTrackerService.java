@@ -4,6 +4,7 @@ import com.github.sandorw.cubetracker.server.cards.CardSearchQuery;
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
+import com.github.sandorw.cubetracker.server.decks.DeckSearchQuery;
 import com.github.sandorw.cubetracker.server.match.MatchResult;
 import java.util.List;
 import java.util.Map;
@@ -124,12 +125,10 @@ public interface CubeTrackerService {
     /**
      * Gets the decks matching the given DeckSearchQuery.
      */
-    /*
     @GET
     @Path("/search/decks")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    List<DeckList> getDeckSearchResults(DeckSearchQuery query);
-    */
+    Map<DeckList, List<MatchResult>> getDeckSearchResults(DeckSearchQuery query);
 
 }

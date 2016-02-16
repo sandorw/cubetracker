@@ -4,6 +4,7 @@ import com.github.sandorw.cubetracker.server.cards.CardSearchQuery;
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
+import com.github.sandorw.cubetracker.server.decks.DeckSearchQuery;
 import com.github.sandorw.cubetracker.server.match.MatchResult;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
 import com.google.common.base.Optional;
@@ -92,6 +93,11 @@ public final class CubeTrackerResource implements CubeTrackerService {
     @Override
     public Map<MagicCard, CardUsageData> getCardSearchResults(CardSearchQuery query) {
         return store.getCardSearchResults(query);
+    }
+
+    @Override
+    public Map<DeckList, List<MatchResult>> getDeckSearchResults(DeckSearchQuery query) {
+        return store.getDeckSearchResults(query);
     }
 
 }
