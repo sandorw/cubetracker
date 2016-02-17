@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
 import org.immutables.value.Value;
+import org.joda.time.LocalDate;
 
 /**
  * Representation of a decklist from a cube draft.
@@ -14,6 +15,8 @@ import org.immutables.value.Value;
 public abstract class DeckList {
 
     public abstract String getPlayerName();
+
+    public abstract LocalDate getDraftDate();
 
     public abstract List<String> getMaindeck();
 
