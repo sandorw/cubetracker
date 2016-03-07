@@ -28,18 +28,28 @@ import com.github.sandorw.cubetracker.server.cards.filters.NumDraftsFilter;
 import com.github.sandorw.cubetracker.server.cards.filters.NumericFilterType;
 import com.github.sandorw.cubetracker.server.cards.filters.TypeFilter;
 import com.github.sandorw.cubetracker.server.configuration.CubeTrackerServerConfiguration;
+import com.github.sandorw.cubetracker.server.decks.CompleteDeckList;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
-import com.github.sandorw.cubetracker.server.decks.ImmutableDeckList;
+import com.github.sandorw.cubetracker.server.decks.DeckSearchQuery;
+import com.github.sandorw.cubetracker.server.decks.ImmutableDeckSearchQuery;
+import com.github.sandorw.cubetracker.server.decks.ImmutablePartialDeckList;
+import com.github.sandorw.cubetracker.server.decks.PartialDeckList;
 import com.github.sandorw.cubetracker.server.match.ImmutableMatchResult;
 import com.github.sandorw.cubetracker.server.match.MatchResult;
+import com.github.sandorw.cubetracker.server.match.filters.ComplexMatchResultFilter;
+import com.github.sandorw.cubetracker.server.match.filters.GameWinPercentageFilter;
+import com.github.sandorw.cubetracker.server.match.filters.ImmutableComplexMatchResultFilter;
+import com.github.sandorw.cubetracker.server.match.filters.ImmutableGameWinPercentageFilter;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.atlasdb.memory.InMemoryAtlasDbFactory;
 import com.palantir.atlasdb.transaction.impl.SerializableTransactionManager;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -133,9 +143,10 @@ public final class AtlasCubeTrackerStoreTest {
 
     @Test
     public void addDeck_notEnoughCards() {
-        int[] basics = {0, 0, 0, 0, 0};
-        DeckList deck = ImmutableDeckList.builder()
+        int[] basics = {0, 0, 0, 0, 0, 0};
+        PartialDeckList deck = ImmutablePartialDeckList.builder()
                 .playerName("test")
+                .draftDate(new LocalDate())
                 .addMaindeck("Gloom")
                 .numBasics(basics)
                 .build();
@@ -145,9 +156,10 @@ public final class AtlasCubeTrackerStoreTest {
 
     @Test
     public void addDeck_duplicateCards() {
-        int[] basics = {39, 0, 0, 0, 0};
-        DeckList deck = ImmutableDeckList.builder()
+        int[] basics = {39, 0, 0, 0, 0, 0};
+        PartialDeckList deck = ImmutablePartialDeckList.builder()
                 .playerName("test")
+                .draftDate(new LocalDate())
                 .addMaindeck("Gloom")
                 .addSideboard("Gloom")
                 .numBasics(basics)
@@ -169,9 +181,10 @@ public final class AtlasCubeTrackerStoreTest {
     }
 
     private String addValidOneCardDeck(String cardName) {
-        int[] basics = {39, 0, 0, 0, 0};
-        DeckList deck = ImmutableDeckList.builder()
+        int[] basics = {39, 0, 0, 0, 0, 0};
+        PartialDeckList deck = ImmutablePartialDeckList.builder()
                 .playerName("test")
+                .draftDate(new LocalDate())
                 .addMaindeck(cardName)
                 .numBasics(basics)
                 .build();
@@ -261,6 +274,49 @@ public final class AtlasCubeTrackerStoreTest {
                 .collect(Collectors.toSet());
         Set<String> expectedNames = ImmutableSet.of("Animate Dead", "Fear");
         assertTrue(searchCardNames.containsAll(expectedNames));
+    }
+
+    @Test
+    public void getDeckSearchResults_validateSearchResults() {
+        store.searchAllCardNames("").stream().forEach(store::addActiveCard);
+        String animateId = addValidOneCardDeck("Animate Dead");
+        String fearId = addValidOneCardDeck("Fear");
+        String elementalId = addValidOneCardDeck("Air Elemental");
+        String recallId = addValidOneCardDeck("Ancestral Recall");
+        store.addMatchResult(ImmutableMatchResult.builder()
+                .firstDeckId(elementalId)
+                .secondDeckId(recallId)
+                .firstDeckWins(5)
+                .secondDeckWins(1)
+                .build());
+        store.addMatchResult(ImmutableMatchResult.builder()
+                .firstDeckId(animateId)
+                .secondDeckId(fearId)
+                .firstDeckWins(5)
+                .secondDeckWins(1)
+                .build());
+        ColorFilter blackFilter = ImmutableColorFilter.of(Color.BLACK);
+        ComplexMagicCardFilter cardFilter = ImmutableComplexMagicCardFilter.builder()
+                .addFilterList(blackFilter)
+                .combiner(FilterCombiner.AND)
+                .build();
+        GameWinPercentageFilter winFilter = ImmutableGameWinPercentageFilter.of(0.5, NumericFilterType.OVER);
+        ComplexMatchResultFilter matchFilter = ImmutableComplexMatchResultFilter.builder()
+                .addFilterList(winFilter)
+                .combiner(FilterCombiner.AND)
+                .build();
+        CardSearchQuery cardQuery = ImmutableCardSearchQuery.builder()
+                .startingSet(StartingSet.ACTIVE)
+                .addMagicCardFilters(cardFilter)
+                .build();
+        DeckSearchQuery deckQuery = ImmutableDeckSearchQuery.builder()
+                .cardSearchQuery(cardQuery)
+                .addMatchResultFilters(matchFilter)
+                .build();
+        Map<CompleteDeckList, List<MatchResult>> searchResults = store.getDeckSearchResults(deckQuery);
+        assertEquals(searchResults.size(), 1);
+        assertEquals(searchResults.get(store.getDeck(animateId).get()),
+                store.getMatchResults(animateId));
     }
 
 }

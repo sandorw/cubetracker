@@ -10,13 +10,20 @@ import com.github.sandorw.cubetracker.server.cards.MagicCard;
 import com.github.sandorw.cubetracker.server.cards.filters.ComplexCardUsageFilter;
 import com.github.sandorw.cubetracker.server.cards.filters.ComplexMagicCardFilter;
 import com.github.sandorw.cubetracker.server.configuration.CubeTrackerServerConfiguration;
+import com.github.sandorw.cubetracker.server.decks.CompleteDeckList;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
+import com.github.sandorw.cubetracker.server.decks.DeckSearchQuery;
+import com.github.sandorw.cubetracker.server.decks.ImmutableCompleteDeckList;
+import com.github.sandorw.cubetracker.server.decks.PartialDeckList;
+import com.github.sandorw.cubetracker.server.decks.filters.ComplexDeckListFilter;
 import com.github.sandorw.cubetracker.server.match.ImmutableMatchResult;
 import com.github.sandorw.cubetracker.server.match.MatchResult;
+import com.github.sandorw.cubetracker.server.match.filters.ComplexMatchResultFilter;
 import com.github.sandorw.cubetracker.server.store.CubeTrackerStore;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeCardsTable;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeCardsTable.CubeCardsRow;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeDecksTable;
+import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeDecksTable.CubeDecksRowResult;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeMatchesTable;
 import com.github.sandorw.cubetracker.server.store.atlas.generated.CubeTrackerStoreTableFactory;
 import com.google.common.base.Optional;
@@ -25,6 +32,7 @@ import com.google.common.collect.Sets;
 import com.palantir.atlasdb.keyvalue.api.RangeRequest;
 import com.palantir.atlasdb.transaction.api.Transaction;
 import com.palantir.atlasdb.transaction.api.TransactionManager;
+import com.palantir.common.base.BatchingVisitableView;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -179,7 +187,7 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
     }
 
     @Override
-    public String addDeck(DeckList deck) {
+    public String addDeck(PartialDeckList deck) {
         //Validate the deck
         Set<String> allCards = Sets.newTreeSet(deck.getMaindeck());
         allCards.removeAll(deck.getSideboard());
@@ -187,6 +195,9 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
             throw new IllegalArgumentException("Maindeck and sideboard contain duplicate cards");
         }
         int[] basics = deck.getNumBasics();
+        if (basics.length != 6) {
+            throw new IllegalArgumentException("Must specify all basics types");
+        }
         int numBasics = 0;
         for (int i = 0; i < basics.length; ++i) {
             numBasics += basics[i];
@@ -246,7 +257,11 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
             //Insert the deck list
             CubeDecksTable cubeDecksTable = TABLES.getCubeDecksTable(atlasTransaction);
             CubeDecksTable.CubeDecksRow deckRow = CubeDecksTable.CubeDecksRow.of(newDeckId);
-            cubeDecksTable.putDeckList(deckRow, deck);
+            CompleteDeckList completeDeck = ImmutableCompleteDeckList.builder()
+                    .from(deck)
+                    .deckId(newDeckId)
+                    .build();
+            cubeDecksTable.putDeckList(deckRow, completeDeck);
             return newDeckId;
         });
         if (deckId == null) {
@@ -323,16 +338,20 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
     @Override
     public List<MatchResult> getMatchResults(String deckId) {
         return txnManager.runTaskReadOnly(atlasTransaction -> {
-            CubeMatchesTable cubeMatchesTable = TABLES.getCubeMatchesTable(atlasTransaction);
-            RangeRequest rangeRequest = CubeMatchesTable.CubeMatchesRow.createPrefixRangeUnsorted(deckId).build();
-            return cubeMatchesTable.getRange(rangeRequest)
-                    .transform(r -> r.getMatchResult())
-                    .immutableCopy();
+            return getMatchResultsOnTxn(deckId, atlasTransaction);
         });
     }
 
+    private List<MatchResult> getMatchResultsOnTxn(String deckId, Transaction atlasTransaction) {
+        CubeMatchesTable cubeMatchesTable = TABLES.getCubeMatchesTable(atlasTransaction);
+        RangeRequest rangeRequest = CubeMatchesTable.CubeMatchesRow.createPrefixRangeUnsorted(deckId).build();
+        return cubeMatchesTable.getRange(rangeRequest)
+                .transform(r -> r.getMatchResult())
+                .immutableCopy();
+    }
+
     @Override
-    public Optional<DeckList> getDeck(String deckId) {
+    public Optional<CompleteDeckList> getDeck(String deckId) {
         return txnManager.runTaskReadOnly(atlasTransaction -> {
             CubeDecksTable cubeDecksTable = TABLES.getCubeDecksTable(atlasTransaction);
             CubeDecksTable.CubeDecksRow row = CubeDecksTable.CubeDecksRow.of(deckId);
@@ -369,6 +388,7 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
             for (ComplexMagicCardFilter filter : query.getMagicCardFilters()) {
                 if (!filter.accept(card)) {
                     it.remove();
+                    break;
                 }
             }
         }
@@ -383,6 +403,7 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
             for (ComplexCardUsageFilter filter : query.getCardUsageFilters()) {
                 if (!filter.accept(cardData)) {
                     it.remove();
+                    break;
                 }
             }
         }
@@ -391,5 +412,74 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
             returnData.put(magicCardMap.get(entry.getKey().getCardName()), entry.getValue());
         }
         return returnData;
+    }
+
+    @Override
+    public Map<CompleteDeckList, List<MatchResult>> getDeckSearchResults(DeckSearchQuery query) {
+        return txnManager.runTaskReadOnly(atlasTransaction -> {
+            Map<CubeDecksTable.CubeDecksRow, CompleteDeckList> deckMap = applyDeckFilters(query, atlasTransaction);
+            return applyMatchResultFilters(query, deckMap, atlasTransaction);
+        });
+    }
+
+    private Map<CubeDecksTable.CubeDecksRow, CompleteDeckList> applyDeckFilters(
+            DeckSearchQuery query,
+            Transaction atlasTransaction) {
+        CubeDecksTable cubeDecksTable = TABLES.getCubeDecksTable(atlasTransaction);
+        Map<CubeDecksTable.CubeDecksRow, CompleteDeckList> deckMap = Maps.newHashMap();
+        if (query.getCardSearchQuery().isPresent()) {
+            Map<MagicCard, CardUsageData> cardDataMap =
+                    getCardSearchResultsOnTxn(query.getCardSearchQuery().get(), atlasTransaction);
+            Set<String> deckIds = Sets.newTreeSet();
+            for (CardUsageData cardData : cardDataMap.values()) {
+                deckIds.addAll(cardData.getDeckIDs());
+            }
+            List<CubeDecksTable.CubeDecksRow> deckRows = deckIds.stream()
+                    .map(name -> CubeDecksTable.CubeDecksRow.of(name))
+                    .collect(Collectors.toList());
+            deckMap = cubeDecksTable.getDeckLists(deckRows);
+            for (Iterator<Map.Entry<CubeDecksTable.CubeDecksRow, CompleteDeckList>> it
+                    = deckMap.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<CubeDecksTable.CubeDecksRow, CompleteDeckList> entry = it.next();
+                CompleteDeckList deck = entry.getValue();
+                for (ComplexDeckListFilter filter : query.getDeckFilters()) {
+                    if (!filter.accept(deck)) {
+                        it.remove();
+                        break;
+                    }
+                }
+            }
+        } else {
+            BatchingVisitableView<CubeDecksRowResult> view = cubeDecksTable.getAllRowsUnordered();
+            for (ComplexDeckListFilter filter : query.getDeckFilters()) {
+                view.filter(row -> filter.accept(row.getDeckList()));
+            }
+            for (CubeDecksRowResult result : view.immutableCopy()) {
+                deckMap.put(result.getRowName(), result.getDeckList());
+            }
+        }
+        return deckMap;
+    }
+
+    private Map<CompleteDeckList, List<MatchResult>> applyMatchResultFilters(
+            DeckSearchQuery query,
+            Map<CubeDecksTable.CubeDecksRow, CompleteDeckList> deckMap,
+            Transaction atlasTransaction) {
+        Map<CompleteDeckList, List<MatchResult>> searchResults = Maps.newHashMap();
+        for (Map.Entry<CubeDecksTable.CubeDecksRow, CompleteDeckList> entry : deckMap.entrySet()) {
+            List<MatchResult> matchResults = getMatchResultsOnTxn(entry.getKey().getDeckId(), atlasTransaction);
+            searchResults.put(entry.getValue(), matchResults);
+        }
+        for (Iterator<Map.Entry<CompleteDeckList, List<MatchResult>>> it
+                = searchResults.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<CompleteDeckList, List<MatchResult>> entry = it.next();
+            for (ComplexMatchResultFilter filter : query.getMatchResultFilters()) {
+                if (!filter.accept(entry.getValue())) {
+                    it.remove();
+                    break;
+                }
+            }
+        }
+        return searchResults;
     }
 }

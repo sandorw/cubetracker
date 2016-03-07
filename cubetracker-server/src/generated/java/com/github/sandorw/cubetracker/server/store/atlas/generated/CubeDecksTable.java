@@ -222,18 +222,18 @@ public final class CubeDecksTable implements
     /**
      * <pre>
      * Column value description {
-     *   type: com.github.sandorw.cubetracker.server.decks.DeckList;
+     *   type: com.github.sandorw.cubetracker.server.decks.CompleteDeckList;
      * }
      * </pre>
      */
-    public static final class DeckList implements CubeDecksNamedColumnValue<com.github.sandorw.cubetracker.server.decks.DeckList> {
-        private final com.github.sandorw.cubetracker.server.decks.DeckList value;
+    public static final class DeckList implements CubeDecksNamedColumnValue<com.github.sandorw.cubetracker.server.decks.CompleteDeckList> {
+        private final com.github.sandorw.cubetracker.server.decks.CompleteDeckList value;
 
-        public static DeckList of(com.github.sandorw.cubetracker.server.decks.DeckList value) {
+        public static DeckList of(com.github.sandorw.cubetracker.server.decks.CompleteDeckList value) {
             return new DeckList(value);
         }
 
-        private DeckList(com.github.sandorw.cubetracker.server.decks.DeckList value) {
+        private DeckList(com.github.sandorw.cubetracker.server.decks.CompleteDeckList value) {
             this.value = value;
         }
 
@@ -248,13 +248,13 @@ public final class CubeDecksTable implements
         }
 
         @Override
-        public com.github.sandorw.cubetracker.server.decks.DeckList getValue() {
+        public com.github.sandorw.cubetracker.server.decks.CompleteDeckList getValue() {
             return value;
         }
 
         @Override
         public byte[] persistValue() {
-            byte[] bytes = com.palantir.atlasdb.compress.CompressionUtils.compress(new com.github.sandorw.cubetracker.server.decks.DeckListPersister().persistToBytes(value), com.palantir.atlasdb.table.description.ColumnValueDescription.Compression.NONE);
+            byte[] bytes = com.palantir.atlasdb.compress.CompressionUtils.compress(new com.github.sandorw.cubetracker.server.decks.CompleteDeckListPersister().persistToBytes(value), com.palantir.atlasdb.table.description.ColumnValueDescription.Compression.NONE);
             return CompressionUtils.compress(bytes, Compression.NONE);
         }
 
@@ -267,7 +267,7 @@ public final class CubeDecksTable implements
             @Override
             public DeckList hydrateFromBytes(byte[] bytes) {
                 bytes = CompressionUtils.decompress(bytes, Compression.NONE);
-                return of(new com.github.sandorw.cubetracker.server.decks.DeckListPersister().hydrateFromBytes(com.palantir.atlasdb.compress.CompressionUtils.decompress(bytes, com.palantir.atlasdb.table.description.ColumnValueDescription.Compression.NONE)));
+                return of(new com.github.sandorw.cubetracker.server.decks.CompleteDeckListPersister().hydrateFromBytes(com.palantir.atlasdb.compress.CompressionUtils.decompress(bytes, com.palantir.atlasdb.table.description.ColumnValueDescription.Compression.NONE)));
             }
         };
 
@@ -321,7 +321,7 @@ public final class CubeDecksTable implements
             return row.getColumns().containsKey(PtBytes.toCachedBytes("d"));
         }
 
-        public com.github.sandorw.cubetracker.server.decks.DeckList getDeckList() {
+        public com.github.sandorw.cubetracker.server.decks.CompleteDeckList getDeckList() {
             byte[] bytes = row.getColumns().get(PtBytes.toCachedBytes("d"));
             if (bytes == null) {
                 return null;
@@ -330,10 +330,10 @@ public final class CubeDecksTable implements
             return value.getValue();
         }
 
-        public static Function<CubeDecksRowResult, com.github.sandorw.cubetracker.server.decks.DeckList> getDeckListFun() {
-            return new Function<CubeDecksRowResult, com.github.sandorw.cubetracker.server.decks.DeckList>() {
+        public static Function<CubeDecksRowResult, com.github.sandorw.cubetracker.server.decks.CompleteDeckList> getDeckListFun() {
+            return new Function<CubeDecksRowResult, com.github.sandorw.cubetracker.server.decks.CompleteDeckList>() {
                 @Override
-                public com.github.sandorw.cubetracker.server.decks.DeckList apply(CubeDecksRowResult rowResult) {
+                public com.github.sandorw.cubetracker.server.decks.CompleteDeckList apply(CubeDecksRowResult rowResult) {
                     return rowResult.getDeckList();
                 }
             };
@@ -381,39 +381,39 @@ public final class CubeDecksTable implements
                 .put("d", DeckList.BYTES_HYDRATOR)
                 .build();
 
-    public Map<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.DeckList> getDeckLists(Collection<CubeDecksRow> rows) {
+    public Map<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.CompleteDeckList> getDeckLists(Collection<CubeDecksRow> rows) {
         Map<Cell, CubeDecksRow> cells = Maps.newHashMapWithExpectedSize(rows.size());
         for (CubeDecksRow row : rows) {
             cells.put(Cell.create(row.persistToBytes(), PtBytes.toCachedBytes("d")), row);
         }
         Map<Cell, byte[]> results = t.get(tableName, cells.keySet());
-        Map<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.DeckList> ret = Maps.newHashMapWithExpectedSize(results.size());
+        Map<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.CompleteDeckList> ret = Maps.newHashMapWithExpectedSize(results.size());
         for (Entry<Cell, byte[]> e : results.entrySet()) {
-            com.github.sandorw.cubetracker.server.decks.DeckList val = DeckList.BYTES_HYDRATOR.hydrateFromBytes(e.getValue()).getValue();
+            com.github.sandorw.cubetracker.server.decks.CompleteDeckList val = DeckList.BYTES_HYDRATOR.hydrateFromBytes(e.getValue()).getValue();
             ret.put(cells.get(e.getKey()), val);
         }
         return ret;
     }
 
-    public void putDeckList(CubeDecksRow row, com.github.sandorw.cubetracker.server.decks.DeckList value) {
+    public void putDeckList(CubeDecksRow row, com.github.sandorw.cubetracker.server.decks.CompleteDeckList value) {
         put(ImmutableMultimap.of(row, DeckList.of(value)));
     }
 
-    public void putDeckList(Map<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.DeckList> map) {
+    public void putDeckList(Map<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.CompleteDeckList> map) {
         Map<CubeDecksRow, CubeDecksNamedColumnValue<?>> toPut = Maps.newHashMapWithExpectedSize(map.size());
-        for (Entry<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.DeckList> e : map.entrySet()) {
+        for (Entry<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.CompleteDeckList> e : map.entrySet()) {
             toPut.put(e.getKey(), DeckList.of(e.getValue()));
         }
         put(Multimaps.forMap(toPut));
     }
 
-    public void putDeckListUnlessExists(CubeDecksRow row, com.github.sandorw.cubetracker.server.decks.DeckList value) {
+    public void putDeckListUnlessExists(CubeDecksRow row, com.github.sandorw.cubetracker.server.decks.CompleteDeckList value) {
         putUnlessExists(ImmutableMultimap.of(row, DeckList.of(value)));
     }
 
-    public void putDeckListUnlessExists(Map<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.DeckList> map) {
+    public void putDeckListUnlessExists(Map<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.CompleteDeckList> map) {
         Map<CubeDecksRow, CubeDecksNamedColumnValue<?>> toPut = Maps.newHashMapWithExpectedSize(map.size());
-        for (Entry<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.DeckList> e : map.entrySet()) {
+        for (Entry<CubeDecksRow, com.github.sandorw.cubetracker.server.decks.CompleteDeckList> e : map.entrySet()) {
             toPut.put(e.getKey(), DeckList.of(e.getValue()));
         }
         putUnlessExists(Multimaps.forMap(toPut));
@@ -601,5 +601,5 @@ public final class CubeDecksTable implements
         return ImmutableList.of();
     }
 
-    static String __CLASS_HASH = "0knHGbu1gxrAYfY1zlq+Aw==";
+    static String __CLASS_HASH = "oMzXPe95zPZNlcfTeUmOcQ==";
 }

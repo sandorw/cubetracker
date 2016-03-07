@@ -12,7 +12,11 @@ import com.palantir.atlasdb.transaction.api.TransactionManager;
 import com.palantir.remoting.http.server.ExceptionMappers;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
+import java.util.EnumSet;
 import javax.net.ssl.SSLSocketFactory;
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 
 /**
  * Dropwizard application for cubetracker-server.
@@ -35,6 +39,13 @@ public final class CubeTrackerServerApplication extends Application<CubeTrackerS
         final CubeTrackerResource resource = CubeTrackerResource.of(store);
         environment.jersey().register(resource);
         ExceptionMappers.visitExceptionMappers(true, environment.jersey()::register);
+
+        final FilterRegistration.Dynamic cors =
+                environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+        cors.setInitParameter("allowedOrigins", "*");
+        cors.setInitParameter("allowedHeaders", "X-Requested-With,Content-Type,Accept,Origin");
+        cors.setInitParameter("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
+        cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
     }
 
 }

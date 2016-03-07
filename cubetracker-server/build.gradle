@@ -26,6 +26,7 @@ dependencies {
 	compile "com.palantir.remoting:http-servers:${httpRemotingVersion}"
 	compile "com.palantir.remoting:error-handling:${httpRemotingVersion}"
 	compile "io.dropwizard:dropwizard-core:$dropwizardVersion"
+	compile "joda-time:joda-time:$jodaVersion"
 	compile "org.apache.commons:commons-lang3:$commonsLangVersion"
 
 	processor "org.immutables:value:${immutablesVersion}"
