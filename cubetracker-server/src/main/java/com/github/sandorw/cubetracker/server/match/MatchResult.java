@@ -2,6 +2,7 @@ package com.github.sandorw.cubetracker.server.match;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.base.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -19,5 +20,7 @@ public abstract class MatchResult {
     public abstract int getFirstDeckWins();
 
     public abstract int getSecondDeckWins();
+
+    public abstract Optional<Integer> getDraws();
 
 }

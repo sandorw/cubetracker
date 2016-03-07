@@ -3,8 +3,9 @@ package com.github.sandorw.cubetracker.server.api;
 import com.github.sandorw.cubetracker.server.cards.CardSearchQuery;
 import com.github.sandorw.cubetracker.server.cards.CardUsageData;
 import com.github.sandorw.cubetracker.server.cards.MagicCard;
-import com.github.sandorw.cubetracker.server.decks.DeckList;
+import com.github.sandorw.cubetracker.server.decks.CompleteDeckList;
 import com.github.sandorw.cubetracker.server.decks.DeckSearchQuery;
+import com.github.sandorw.cubetracker.server.decks.PartialDeckList;
 import com.github.sandorw.cubetracker.server.match.MatchResult;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +87,7 @@ public interface CubeTrackerService {
     @Path("/decks/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    String addDeck(DeckList deck);
+    String addDeck(PartialDeckList deck);
 
     /**
      * Retrieves a deck via the deck ID.
@@ -94,7 +95,7 @@ public interface CubeTrackerService {
     @GET
     @Path("/decks/{deckId}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeckList getDeck(@PathParam("deckId") String deckId);
+    CompleteDeckList getDeck(@PathParam("deckId") String deckId);
 
     /**
      * Submits a match result between two decks.
@@ -129,6 +130,6 @@ public interface CubeTrackerService {
     @Path("/search/decks")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Map<DeckList, List<MatchResult>> getDeckSearchResults(DeckSearchQuery query);
+    Map<CompleteDeckList, List<MatchResult>> getDeckSearchResults(DeckSearchQuery query);
 
 }

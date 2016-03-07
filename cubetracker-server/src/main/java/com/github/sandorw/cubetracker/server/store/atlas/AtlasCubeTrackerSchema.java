@@ -4,8 +4,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.github.sandorw.cubetracker.server.cards.CardUsageDataPersister;
-import com.github.sandorw.cubetracker.server.decks.DeckListPersister;
+import com.github.sandorw.cubetracker.server.decks.CompleteDeckListPersister;
 import com.github.sandorw.cubetracker.server.match.MatchResultPersister;
 import com.palantir.atlasdb.schema.AtlasSchema;
 import com.palantir.atlasdb.schema.Namespace;
@@ -20,7 +21,9 @@ import java.io.IOException;
  */
 public final class AtlasCubeTrackerSchema implements AtlasSchema {
     public static final AtlasSchema INSTANCE = new AtlasCubeTrackerSchema();
-    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new GuavaModule());
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .registerModule(new GuavaModule())
+            .registerModule(new JodaModule());
     public static final Namespace NAMESPACE = Namespace.create("cubeTracker");
     public static final Schema SCHEMA = generateSchema();
 
@@ -58,7 +61,7 @@ public final class AtlasCubeTrackerSchema implements AtlasSchema {
                 rowComponent("deck_id", ValueType.VAR_STRING);
 
                 columns();
-                column("deck_list", "d", DeckListPersister.class);
+                column("deck_list", "d", CompleteDeckListPersister.class);
             }
         });
 

@@ -28,10 +28,12 @@ import com.github.sandorw.cubetracker.server.cards.filters.NumDraftsFilter;
 import com.github.sandorw.cubetracker.server.cards.filters.NumericFilterType;
 import com.github.sandorw.cubetracker.server.cards.filters.TypeFilter;
 import com.github.sandorw.cubetracker.server.configuration.CubeTrackerServerConfiguration;
+import com.github.sandorw.cubetracker.server.decks.CompleteDeckList;
 import com.github.sandorw.cubetracker.server.decks.DeckList;
 import com.github.sandorw.cubetracker.server.decks.DeckSearchQuery;
-import com.github.sandorw.cubetracker.server.decks.ImmutableDeckList;
 import com.github.sandorw.cubetracker.server.decks.ImmutableDeckSearchQuery;
+import com.github.sandorw.cubetracker.server.decks.ImmutablePartialDeckList;
+import com.github.sandorw.cubetracker.server.decks.PartialDeckList;
 import com.github.sandorw.cubetracker.server.match.ImmutableMatchResult;
 import com.github.sandorw.cubetracker.server.match.MatchResult;
 import com.github.sandorw.cubetracker.server.match.filters.ComplexMatchResultFilter;
@@ -47,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -140,9 +143,10 @@ public final class AtlasCubeTrackerStoreTest {
 
     @Test
     public void addDeck_notEnoughCards() {
-        int[] basics = {0, 0, 0, 0, 0};
-        DeckList deck = ImmutableDeckList.builder()
+        int[] basics = {0, 0, 0, 0, 0, 0};
+        PartialDeckList deck = ImmutablePartialDeckList.builder()
                 .playerName("test")
+                .draftDate(new LocalDate())
                 .addMaindeck("Gloom")
                 .numBasics(basics)
                 .build();
@@ -152,9 +156,10 @@ public final class AtlasCubeTrackerStoreTest {
 
     @Test
     public void addDeck_duplicateCards() {
-        int[] basics = {39, 0, 0, 0, 0};
-        DeckList deck = ImmutableDeckList.builder()
+        int[] basics = {39, 0, 0, 0, 0, 0};
+        PartialDeckList deck = ImmutablePartialDeckList.builder()
                 .playerName("test")
+                .draftDate(new LocalDate())
                 .addMaindeck("Gloom")
                 .addSideboard("Gloom")
                 .numBasics(basics)
@@ -176,9 +181,10 @@ public final class AtlasCubeTrackerStoreTest {
     }
 
     private String addValidOneCardDeck(String cardName) {
-        int[] basics = {39, 0, 0, 0, 0};
-        DeckList deck = ImmutableDeckList.builder()
+        int[] basics = {39, 0, 0, 0, 0, 0};
+        PartialDeckList deck = ImmutablePartialDeckList.builder()
                 .playerName("test")
+                .draftDate(new LocalDate())
                 .addMaindeck(cardName)
                 .numBasics(basics)
                 .build();
@@ -307,7 +313,7 @@ public final class AtlasCubeTrackerStoreTest {
                 .cardSearchQuery(cardQuery)
                 .addMatchResultFilters(matchFilter)
                 .build();
-        Map<DeckList, List<MatchResult>> searchResults = store.getDeckSearchResults(deckQuery);
+        Map<CompleteDeckList, List<MatchResult>> searchResults = store.getDeckSearchResults(deckQuery);
         assertEquals(searchResults.size(), 1);
         assertEquals(searchResults.get(store.getDeck(animateId).get()),
                 store.getMatchResults(animateId));
