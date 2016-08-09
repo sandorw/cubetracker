@@ -27,7 +27,11 @@ public interface CubeTrackerStore {
 
     List<String> searchActiveCardNames(String partialCardName);
 
+    List<String> getActiveCardNames();
+
     List<String> searchInactiveCardNames(String partialCardName);
+
+    List<String> getInactiveCardNames();
 
     Optional<CardUsageData> getCubeCardData(String cardName);
 

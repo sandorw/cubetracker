@@ -49,12 +49,28 @@ public interface CubeTrackerService {
     List<String> searchActiveCardNames(@PathParam("partialCardName") String partialCardName);
 
     /**
+     * Returns a list of active card names.
+     */
+    @GET
+    @Path("/cubecards/active")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<String> getActiveCardNames();
+
+    /**
      * Returns possible matches given a partial card name from active cards in the cube.
      */
     @GET
     @Path("/cubecards/inactive/search/{partialCardName}")
     @Produces(MediaType.APPLICATION_JSON)
     List<String> searchInactiveCardNames(@PathParam("partialCardName") String partialCardName);
+
+    /**
+     * Returns a list of inactive card names.
+     */
+    @GET
+    @Path("/cubecards/inactive")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<String> getInactiveCardNames();
 
     /**
      * Retrieves card usage data for the given cube card.
