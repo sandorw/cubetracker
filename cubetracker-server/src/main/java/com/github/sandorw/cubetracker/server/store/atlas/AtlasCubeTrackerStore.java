@@ -482,4 +482,14 @@ public final class AtlasCubeTrackerStore implements CubeTrackerStore {
         }
         return searchResults;
     }
+
+    @Override
+    public List<String> getActiveCardNames() {
+        return Lists.newArrayList(activeCardNames);
+    }
+
+    @Override
+    public List<String> getInactiveCardNames() {
+        return Lists.newArrayList(inactiveCardNames);
+    }
 }

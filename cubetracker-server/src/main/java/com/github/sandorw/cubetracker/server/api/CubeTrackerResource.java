@@ -101,4 +101,14 @@ public final class CubeTrackerResource implements CubeTrackerService {
         return store.getDeckSearchResults(query);
     }
 
+    @Override
+    public List<String> getActiveCardNames() {
+        return store.getActiveCardNames();
+    }
+
+    @Override
+    public List<String> getInactiveCardNames() {
+        return store.getInactiveCardNames();
+    }
+
 }
