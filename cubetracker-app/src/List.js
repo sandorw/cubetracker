@@ -1,8 +1,40 @@
 import React from 'react';
 import {render} from 'react-dom';
 import $ from 'jquery';
+import {ListGroup, ListGroupItem} from 'react-bootstrap';
 
 export default class List extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {selectedCard: 'Terror'};
+    this.selectCard = this.selectCard.bind(this);
+  }
+  selectCard(selectedCard) {
+    this.setState({selectedCard: selectedCard});
+  }
+  render() {
+    return (
+      <div className="twoWaySplit">
+        <div className="leftComponent">
+          <CubeCards onSelect={this.selectCard} />
+        </div>
+        <div className="rightComponent">
+          <CardInfo name={this.state.selectedCard} />
+        </div>
+      </div>
+    )
+  }
+}
+
+class CardInfo extends React.Component {
+  render() {
+    return (
+      <p>Card info here: {this.props.name}</p>
+    )
+  }
+}
+
+class CubeCards extends React.Component {
   constructor(props) {
     super(props);
     this.state = {active: [], inactive: []};
@@ -71,9 +103,9 @@ export default class List extends React.Component {
   render() {
     return (
       <div>
-        <CardList list={this.state.active} />
+        <CardList list={this.state.active} onSelect={this.props.onSelect} />
         <CardSelector label="Add active card" onSubmit={this.activeSubmit} />
-        <CardList list={this.state.inactive} />
+        <CardList list={this.state.inactive} onSelect={this.props.onSelect} />
         <CardSelector label="Add inactive card" onSubmit={this.inactiveSubmit} />
       </div>
     )
@@ -83,12 +115,11 @@ export default class List extends React.Component {
 class CardList extends React.Component {
   render() {
     return (
-      <ul>
-        {this.props.list.map(function(name){
-          var link = "http://localhost:8080/cubecards/" + name;
-          return <li><a href={link}>{name}</a></li>;
-        })}
-      </ul>
+      <ListGroup>
+        {this.props.list.map(function(name) {
+            return <ListGroupItem onClick={this.props.onSelect.bind(this, name)}>{name}</ListGroupItem>;
+        }, this)}
+      </ListGroup>
     )
   }
 }
