@@ -6,7 +6,7 @@ import {ListGroup, ListGroupItem} from 'react-bootstrap';
 export default class List extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {selectedCard: 'Terror'};
+    this.state = {selectedCard: ''};
     this.selectCard = this.selectCard.bind(this);
   }
   selectCard(selectedCard) {
@@ -27,9 +27,46 @@ export default class List extends React.Component {
 }
 
 class CardInfo extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {cardusage: {}};
+    this.loadCardUsage = this.loadCardUsage.bind(this);
+  }
+  loadCardUsage(cardname) {
+    var url = "http://localhost:8080/cubecards/" + cardname;
+    var activeRequest = $.ajax({
+      type: 'GET',
+      url: url,
+      success: function(cardusage) {
+        this.setState({cardusage: cardusage});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(url, status, err.toString());
+      }.bind(this)
+    });
+    this.setState({activeRequest: activeRequest});
+  }
+  componentWillUnmount() {
+    this.state.activeRequest.abort();
+  }
+  componentWillReceiveProps(nextProps) {
+    this.loadCardUsage(nextProps.name);
+  }
   render() {
     return (
-      <p>Card info here: {this.props.name}</p>
+      <div>
+        {$.isEmptyObject(this.state.cardusage) ?
+          <p>No card selected</p> :  
+          <div>
+            <p>Card name: {this.props.name}</p>
+            <p>Status: {this.state.cardusage.isActive ? "Active" : "Inactive"}</p>
+            <p>Number of wins: {this.state.cardusage.numWins}</p>
+            <p>Number of losses: {this.state.cardusage.numLosses}</p>
+            <p>Number of drafts: {this.state.cardusage.numDrafts}</p>
+            <p>Number of maindecks: {this.state.cardusage.numMaindecks}</p>
+          </div>
+        }
+      </div>
     )
   }
 }
