@@ -1,0 +1,72 @@
+buildscript {
+        repositories {
+                mavenCentral()
+		jcenter()
+		maven { url 'https://plugins.gradle.org/m2/' }
+        }
+
+        dependencies {
+		classpath "com.palantir:gradle-baseline-java:$baselineVersion"
+		classpath "gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.3.0"
+		classpath "gradle.plugin.com.palantir.gradle.javadist:gradle-java-distribution:${gradleJavaDistVersion}"
+		classpath "gradle.plugin.org.inferred:gradle-processors:${gradleProcessorsVersion}"
+                classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.4.0'
+        }
+}
+
+apply plugin: 'com.github.kt3k.coveralls'
+apply plugin: 'com.palantir.baseline-config'
+apply plugin: 'com.palantir.git-version'
+apply plugin: 'jacoco'
+apply plugin: 'org.inferred.processors'
+
+allprojects {
+	apply plugin: 'java'
+	apply plugin: 'jacoco'
+
+	repositories {
+		jcenter()
+	}
+
+	version gitVersion()
+	jacoco {
+		toolVersion = jacocoVersion
+	}
+}
+
+subprojects {
+	jacocoTestReport {
+		additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
+		sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+		classDirectories = files(sourceSets.main.output)
+		reports {
+			html.enabled = true
+			xml.enabled = true
+			csv.enabled = false
+		}
+	}
+}
+
+task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
+	dependsOn = subprojects.test
+	additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
+	sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
+	classDirectories = files(subprojects.sourceSets.main.output)
+	executionData = files(subprojects.jacocoTestReport.executionData)
+	reports {
+		html.enabled = true
+		xml.enabled = true
+		csv.enabled = false
+	}
+}
+
+afterEvaluate {
+        coveralls {
+                jacocoReportPath = "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        }
+}
+
+tasks.coveralls {
+        dependsOn tasks.jacocoTestReport
+}
+

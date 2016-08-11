@@ -1,0 +1,21 @@
+.list-group {
+  width: 300px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.twoWaySplit {
+  width: 100%;
+}
+
+.leftComponent {
+  width: 50%;
+  float: left;
+  padding-left: 10%;
+}
+
+.rightComponent {
+  width: 50%;
+  float: right;
+  text-align: center;
+}

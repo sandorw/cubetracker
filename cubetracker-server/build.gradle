@@ -1,0 +1,44 @@
+apply plugin: 'com.palantir.baseline-checkstyle'
+apply plugin: 'com.palantir.baseline-eclipse'
+apply plugin: 'com.palantir.baseline-findbugs'
+apply plugin: 'org.inferred.processors'
+
+sourceCompatibility = '1.8'
+
+dependencies {
+	repositories {
+                mavenCentral()
+                jcenter()
+                maven { 
+			url 'https://plugins.gradle.org/m2/' 
+			url 'https://dl.bintray.com/palantir/releases/'
+		}
+
+        }
+
+        compile "com.google.guava:guava:$guavaVersion"
+	compile "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
+        compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+	compile "com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion"
+	compile "com.palantir.atlasdb:atlasdb-client:$atlasVersion"
+	compile "com.palantir.atlasdb:atlasdb-config:$atlasVersion"
+	compile "com.palantir.atlasdb:atlasdb-rocksdb:$atlasVersion"
+	compile "com.palantir.remoting:http-servers:${httpRemotingVersion}"
+	compile "com.palantir.remoting:error-handling:${httpRemotingVersion}"
+	compile "io.dropwizard:dropwizard-core:$dropwizardVersion"
+	compile "joda-time:joda-time:$jodaVersion"
+	compile "org.apache.commons:commons-lang3:$commonsLangVersion"
+
+	processor "org.immutables:value:${immutablesVersion}"
+
+        testCompile "junit:junit:$junitVersion"
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir 'src/generated/java'
+		}
+	}
+}
